@@ -1,0 +1,53 @@
+command /tempmute <offline player> <integer> [<text>]:
+	usage: &e/tempmute &c<player> &b<timespan in seconds> &3[reason](optional)
+	permission: op
+	trigger:
+		if arg 1 is set:
+			if arg 2 is set:
+				if arg 3 is set:
+					set {tempmute.%arg-1's uuid%} to true
+					set {tempmute.ts.%arg-1's uuid%} to arg-2
+					set {reason.tm.%arg-1's uuid%} to arg-3
+					set {reason.tm.msg.%arg-1's uuid%} to true
+					send "&eSuccessfully tempmuted &f%arg-1%&e for &f%arg-2% seconds &ewith reason: &f%arg-3%" to player
+				else:
+					set {tempmute.%arg-1's uuid%} to true
+					set {tempmute.nr.%arg-1's uuid%} to true
+					set {tempmute.ts.%arg-1's uuid%} to arg-2
+					send "&eSuccessfully tempmuted &f%arg-1%&e for &f%arg-2% seconds &ewith reason: &f%arg-3%" to player
+			else:
+				send "&f&l➟ &cYou have to choose a timespan (seconds)" to player
+		else:
+			send "&f&l➟ &cYou have to type a user!" to player
+			
+on chat:
+	if {reason.tm.msg.%player's uuid%} is true:
+		cancel event
+		send "&cYou have been tempmuted for &f%{reason.tm.%player's uuid%}%"
+		send "&cTime left: &f%{tempmute.ts.%player's uuid%}% &c(&6seconds&c)"
+	if {tempmute.nr.%player's uuid%} is true:
+		cancel event
+		send "&cYou have been tempmuted without a reason specified"
+		send "&cTime left: &f%{tempmute.ts.%player's uuid%}% &c(&6seconds&c)"
+
+every second:
+	loop all players:
+		if {tempmute.%loop-player's uuid%} is true:
+			remove 1 from {tempmute.ts.%loop-player's uuid%}
+			if {tempmute.ts.%loop-player's uuid%} is 0:
+				set {tempmute.%loop-player's uuid%} to false
+				clear {tempmute.ts.%loop-player's uuid%}
+				set {tempmute.nr.%loop-player's uuid%} to false
+				clear {reason.tm.%loop-player's uuid%}
+				set {reason.tm.msg.%loop-player's uuid%} to false
+				send "&eYou have been unmuted!" to loop-player
+command /unmute <offline player>:
+	usage: &e/unmute &c<player>
+	permission: op
+	trigger:
+		set {tempmute.%player's uuid%} to false
+		clear {tempmute.ts.%player's uuid%}
+		set {tempmute.nr.%player's uuid%} to false
+		clear {reason.tm.%player's uuid%}
+		set {reason.tm.msg.%player's uuid%} to false
+		send "&eYou have been unmuted!" to player
